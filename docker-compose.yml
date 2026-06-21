@@ -1,0 +1,39 @@
+# Local development orchestration only — NOT the production topology.
+# In production, Postgres is a separately managed instance (RDS, Cloud SQL,
+# etc.) with its own lifecycle, independent of the app's deployment. The app
+# is already decoupled from where Postgres runs: it only depends on
+# DATABASE_URL (see app/config.py), which here points at the `db` service
+# below, but in production would point at that managed instance instead.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # <host dir>:<container dir>:<options>
+      - canals_pgdata:/var/lib/postgresql/data
+      # The official postgres image runs every *.sql file in this directory, in
+      # filename order, the first time the data volume is empty.
+      - ./db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  canals_pgdata:
