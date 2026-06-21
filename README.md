@@ -165,16 +165,14 @@ separate locking step needed. `run.py` also passes `threaded=True` to
 Flask's dev server so the 10 requests genuinely overlap rather than
 queueing sequentially.
 
-## Hosting this
+## Deploying this
 
-For the take-home itself you probably don't need to host it anywhere — a
-local run plus this README/test script is normally enough for a live
-review. If you do want a public URL, in order of effort:
+Three options, in order of effort:
 
-**Quick tunnel (lowest effort, good for a live demo call).** Run it
-locally (`docker compose up`) and expose the `app` service with a tunnel,
-e.g. [ngrok](https://ngrok.com) (`ngrok http 8000`) or `cloudflared tunnel
---url http://localhost:8000`. You get a public HTTPS URL in seconds.
+**Quick tunnel (lowest effort, good for a live demo).** Run it locally
+(`docker compose up`) and expose the `app` service with a tunnel, e.g.
+[ngrok](https://ngrok.com) (`ngrok http 8000`) or `cloudflared tunnel --url
+http://localhost:8000`. You get a public HTTPS URL in seconds.
 
 **PaaS with a managed Postgres add-on (Render, Railway, Fly.io).** All
 three will build the `Dockerfile` directly from a Git push and offer a
