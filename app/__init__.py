@@ -33,11 +33,13 @@ def create_app(config_overrides: dict | None = None) -> Flask:
         payment_gateway=MockPaymentGateway(),
     )
 
+    from app.routes.dashboard import bp as dashboard_bp
     from app.routes.health import bp as health_bp
     from app.routes.orders import bp as orders_bp
 
     app.register_blueprint(health_bp)
     app.register_blueprint(orders_bp)
+    app.register_blueprint(dashboard_bp)
 
     @app.before_request
     def _start_request():

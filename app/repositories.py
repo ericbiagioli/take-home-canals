@@ -18,6 +18,20 @@ def get_products_by_ids(conn, product_ids: list[int]) -> dict:
     return {row["id"]: row for row in rows}
 
 
+def get_dashboard_stats(conn) -> dict:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT
+                (SELECT count(*) FROM warehouses) AS warehouses,
+                (SELECT count(*) FROM customers)  AS customers,
+                (SELECT count(*) FROM products)   AS products,
+                (SELECT count(*) FROM orders)     AS orders
+            """
+        )
+        return cur.fetchone()
+
+
 class InsufficientStockError(Exception):
     def __init__(self, product_id: int):
         self.product_id = product_id

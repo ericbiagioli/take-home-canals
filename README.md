@@ -4,7 +4,17 @@ A production-shaped order management service: a customer places an order,
 the service finds the closest warehouse that can fill the entire order from
 its own stock, charges the customer, and persists the result in Postgres.
 
+A dashboard at the root URL (`/`) shows live system stats (warehouse/customer/
+product/order counts), lets you send `POST /orders` requests by hand (with a
+few pre-loaded example payloads) and inspect the response, and can trigger
+the `scripts/smoke_test.py` suite with a button and show its output.
+
+The sections below cover setup, the API, design decisions, and the project
+layout.
+
 ## Quick start
+
+### Option 1: Docker Compose
 
 ```bash
 cp .env.example .env
@@ -18,6 +28,15 @@ healthy, then starts the API on `http://localhost:8000`.
 
 Health check: `GET /health` (does a real `SELECT 1` against Postgres, not
 just "the process is up").
+
+### Option 2: Make
+
+```bash
+make up
+```
+
+Equivalent to option 1 — see the [Makefile](Makefile) (`make help` lists all
+targets).
 
 ### Without Docker
 
@@ -95,6 +114,22 @@ so the client only has to write one parser:
 Returns the same shape as above. (Not in the original spec, but trivial
 given everything above already exists, and useful for verifying the result
 of a `POST` without going straight to the database.)
+
+### `GET /`
+
+A small dashboard (`app/routes/dashboard.py`, `app/templates/dashboard.html`)
+for poking at the running service without `curl`:
+
+- Live counts of warehouses, customers, products, and orders processed
+  (`GET /api/dashboard/stats`).
+- A text box that sends whatever JSON you put in it straight to
+  `POST /orders` and shows the response, with a few one-click example
+  payloads (valid order, declined card, missing customer, missing product,
+  validation error) to pre-fill it.
+- A button that runs `scripts/smoke_test.py` against this same server and
+  database (`POST /api/dashboard/smoke-test`) and shows its output. This
+  creates real orders and changes real stock levels, the same as running
+  the script by hand would.
 
 ## Database setup: a SQL dump, not a Python script
 
@@ -329,6 +364,12 @@ app/
   routes/
     orders.py               POST /orders, GET /orders/:id, idempotency
     health.py               GET /health (real DB connectivity check)
+    dashboard.py            GET /, stats API, smoke-test runner (see below)
+  templates/
+    dashboard.html            dashboard markup
+  static/
+    dashboard.css             dashboard styling
+    dashboard.js               dashboard stats/console/smoke-test behavior
 db/
   01_schema.sql           table definitions, indices (plain SQL, no app code)
   02_seed.sql             generated realistic demo data (see above)

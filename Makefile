@@ -10,14 +10,7 @@ $(info   )
 endif
 
 include $(ENV_FILE)
-export $(shell sed -e 's/=.*//' -e 's/^\#.*//' $(ENV_FILE)) 
-
-ifndef DOCKER_COMPOSE_USER
-export DOCKER_COMPOSE_USER=$(shell id -un)
-export DOCKER_COMPOSE_GROUP=$(shell id -gn)
-export DOCKER_COMPOSE_UID=$(shell id -u)
-export DOCKER_COMPOSE_GID=$(shell id -g)
-endif
+export $(shell sed -e 's/=.*//' -e 's/^\#.*//' $(ENV_FILE))
 
 .DEFAULT_GOAL := help
 
@@ -39,7 +32,7 @@ start: ## Starts the application (must has been created before using the up targ
 	@docker compose $@
 
 ps: ## Show the running docker processes
-	@docker compose $(DC_CONF) $@
+	@docker compose $@
 
 logs: ## Show the logs of the running docker processes
 	@docker compose $@
@@ -50,9 +43,8 @@ shell_postgres: ## Open a bash shell in the PostgreSQL container
 shell_app: ## Open a bash shell in the application container
 	@docker compose exec app bash
 
-rm: ## Stop and remove containers
-	@docker compose rm -sfv
-
-clean: ## Remove all (including the database volume)
-	@docker compose rm -sfv
+clean: ## Stop and remove containers, network, and the database volume
 	@docker compose down -v
+
+rm: clean ## Wipe the database volume, then recreate and reseed the database
+	@docker compose up -d

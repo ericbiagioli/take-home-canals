@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canals — Order Management Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+  <header>
+    <h1>Canals — Order Management Dashboard</h1>
+    <p class="subtitle">
+      System stats, a console for trying <code>POST /orders</code> directly, and a button to run the
+      end-to-end smoke tests.
+    </p>
+  </header>
+
+  <section class="card">
+    <div class="card-header">
+      <h2>System stats</h2>
+      <div class="card-header-actions">
+        <span id="db-health" class="health-badge health-unknown">Database: checking…</span>
+        <button id="refresh-stats" class="link-button" type="button">Refresh</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value" id="stat-warehouses">—</span>
+        <span class="stat-label">Warehouses</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-customers">—</span>
+        <span class="stat-label">Customers</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-products">—</span>
+        <span class="stat-label">Products (items)</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-orders">—</span>
+        <span class="stat-label">Orders processed</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Try <code>POST /orders</code></h2>
+    <p>Click an example to load it into the box, edit it if you want, then send it.</p>
+    <div class="examples" id="examples"></div>
+
+    <textarea id="request-body" rows="14" spellcheck="false"></textarea>
+
+    <div class="actions">
+      <button id="send-request" type="button">Send</button>
+      <span class="status" id="send-status"></span>
+    </div>
+
+    <h3>Response</h3>
+    <pre id="response-output">—</pre>
+  </section>
+
+  <section class="card">
+    <h2>Smoke tests</h2>
+    <p>
+      Runs <code>scripts/smoke_test.py</code> end-to-end against this server and its database.
+      This creates real orders and modifies real stock levels.
+    </p>
+    <div class="actions">
+      <button id="run-smoke-tests" type="button">Run smoke tests</button>
+      <span class="status" id="smoke-status"></span>
+    </div>
+    <pre id="smoke-output">—</pre>
+  </section>
+
+  <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
