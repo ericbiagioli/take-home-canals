@@ -29,8 +29,27 @@ def create_order():
         parsed = parse_create_order_request(raw_body)
         status, body = current_app.order_service.create_order(conn, parsed)
     except Exception:
+        # No exception from here down is left unhandled: this re-raises
+        # unconditionally, and register_error_handlers() in app/errors.py
+        # catches everything that reaches it -- ApiError subclasses
+        # (ValidationError/NotFoundError/ConflictError/...) get their real
+        # status code, and anything else (including a raw psycopg2/database
+        # error) still gets a clean JSON 500 instead of propagating as an
+        # unhandled crash. This block exists purely for the
+        # idempotency-claim cleanup, not for classifying the error.
+        #
+        # The cleanup itself is best-effort and wrapped separately: if the
+        # original exception was the database connection itself going bad,
+        # trying to run another query on it here would raise too, and an
+        # unguarded second exception would replace the first one and hide
+        # what actually went wrong.
         if idempotency_key:
-            repo.release_idempotency_claim(conn, idempotency_key)
+            try:
+                repo.release_idempotency_claim(conn, idempotency_key)
+            except Exception:
+                current_app.logger.exception(
+                    "Failed to release idempotency claim %s after a failed order attempt", idempotency_key
+                )
         raise
 
     if idempotency_key:

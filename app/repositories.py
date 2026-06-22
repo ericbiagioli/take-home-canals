@@ -11,6 +11,14 @@ def get_products_by_ids(conn, product_ids: list[int]) -> dict:
     if not product_ids:
         return {}
     with conn.cursor() as cur:
+        # Not a SQL injection risk: the %s here is psycopg2's parameter
+        # placeholder (DB-API paramstyle), not Python string formatting --
+        # `product_ids` is passed as a separate parameter to execute(), never
+        # concatenated/interpolated into the SQL text. psycopg2 adapts a
+        # Python list passed this way into a properly-quoted Postgres ARRAY
+        # literal, which is exactly what `= ANY(%s)` expects; this is the
+        # documented, safe way to do a "WHERE col IN (...)" query against a
+        # variable-length list with psycopg2.
         cur.execute(
             "SELECT * FROM products WHERE id = ANY(%s)", (product_ids,)
         )

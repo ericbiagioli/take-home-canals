@@ -28,6 +28,12 @@ def find_best_warehouse(conn, items: Iterable[dict], dest_lat: float, dest_lon: 
     product_ids = [item["product_id"] for item in items]
 
     with conn.cursor() as cur:
+        # Not a SQL injection risk, same as get_products_by_ids() in
+        # app/repositories.py: %s is psycopg2's parameter placeholder, not
+        # Python string formatting -- product_ids is passed as a separate
+        # parameter to execute(), never concatenated into the SQL text.
+        # psycopg2 adapts the Python list into a properly-quoted Postgres
+        # ARRAY literal, which is exactly what `= ANY(%s)` expects.
         cur.execute(
             """
             SELECT warehouse_id, product_id, quantity
@@ -52,6 +58,7 @@ def find_best_warehouse(conn, items: Iterable[dict], dest_lat: float, dest_lon: 
         raise NoWarehouseAvailable()
 
     with conn.cursor() as cur:
+        # Not a SQL injection risk, same reasoning as above.
         cur.execute(
             "SELECT id, name, address, latitude, longitude FROM warehouses WHERE id = ANY(%s)",
             (eligible_ids,),
