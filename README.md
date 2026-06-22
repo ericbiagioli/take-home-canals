@@ -12,6 +12,11 @@ the `scripts/smoke_test.py` suite with a button and show its output.
 The sections below cover setup, the API, design decisions, and the project
 layout.
 
+## Live Demo
+
+This task is currently hosted in http://79.143.185.92:8000/
+
+
 ## Quick start
 
 ### Option 1: Docker Compose
